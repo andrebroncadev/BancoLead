@@ -11,7 +11,6 @@ type Recommendation = {
 };
 type Props = { profiles: (Profile & { leadName: string })[]; initialRecommendations: Recommendation[] };
 
-const currency = (value: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value);
 
 export function RecommendationsPanel({ profiles, initialRecommendations }: Props) {
   const [selectedId, setSelectedId] = useState(profiles[0]?.id || "");
