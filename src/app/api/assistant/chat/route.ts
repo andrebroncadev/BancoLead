@@ -165,7 +165,7 @@ export async function POST(request: Request) {
     ];
     let response = await ai.models.generateContent({
       model: GEMINI_MODEL,
-      contents,
+      contents: contents as never,
       config: { tools: [{ functionDeclarations: declarations }] },
     });
     const actions: Record<string, unknown>[] = [];
@@ -186,7 +186,7 @@ export async function POST(request: Request) {
         }
       }
       contents.push({ role: "user", parts: functionResponses });
-      response = await ai.models.generateContent({ model: GEMINI_MODEL, contents, config: { tools: [{ functionDeclarations: declarations }] } });
+      response = await ai.models.generateContent({ model: GEMINI_MODEL, contents: contents as never, config: { tools: [{ functionDeclarations: declarations }] } });
     }
     return NextResponse.json({ text: response.text || "Concluído.", actions });
   } catch (error) {
