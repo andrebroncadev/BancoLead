@@ -159,7 +159,7 @@ export async function POST(request: Request) {
       "Para criar perfil, se o lead ainda não estiver cadastrado, peça os dados ou cadastre-o apenas se o usuário também tiver pedido isso explicitamente.",
       "Após cada operação, informe claramente o que foi realmente salvo. Não diga que gravou se a ferramenta falhar.",
       "Responda em português brasileiro, de forma direta e organizada.",
-    ].join("\\n");
+    ].join("\n");
     const contents: Array<{ role: string; parts: Array<Record<string, unknown>> }> = [...messages];
     let response = await ai.models.generateContent({
       model: GEMINI_MODEL,
