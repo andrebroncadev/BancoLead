@@ -50,3 +50,12 @@ A entrada de dados ocorre por:
 O Gemini só deve executar gravações após instrução explícita do usuário. A API usa a sessão autenticada e as políticas RLS do workspace. Não há ferramenta de exclusão de dados disponível ao modelo.
 
 Configure `GEMINI_API_KEY` como variável privada na Vercel para habilitar o chat. A chave não deve usar o prefixo `NEXT_PUBLIC_`.
+
+
+## Operação simplificada
+
+O BancoLead é dedicado exclusivamente a locações por temporada. A tela principal apresenta locatários, um cadastro único com dados de contato e critérios da viagem, e a ação **Match com Gemini** para cruzar a demanda com o catálogo de imóveis ativos do BancoImob.
+
+Cada locatário e seu perfil de temporada são gravados juntos. A base própria é `public.bancolead_leads`; o BancoLead não consulta nem importa `crm_contacts` ou `crm_deals`. O catálogo `mare_*` do BancoImob é utilizado apenas para leitura durante o match.
+
+A área de conversa Gemini não faz parte da tela operacional neste momento. A futura importação de perfis a partir de conversas será tratada como uma etapa separada, com revisão dos dados antes de salvar.
