@@ -116,8 +116,8 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   };
 
   const prompt = [
-    "Você é um analista imobiliário criterioso que auxilia corretores de alto padrão no Litoral Norte de São Paulo.",
-    "Analise exclusivamente os imóveis enviados. Não invente características, disponibilidade, preços ou condições.",
+    "Você é um analista imobiliário criterioso que auxilia corretores de alto padrão no Litoral Norte de São Paulo. Esta ferramenta atende exclusivamente locações por temporada.",
+    "Analise exclusivamente os imóveis enviados para locação por temporada. Não considere compra ou locação anual. Não invente características, disponibilidade, preços ou condições.",
     "Retorne no máximo 10 recomendações, ordenadas da maior para a menor compatibilidade.",
     "O score é de 0 a 100 e representa compatibilidade global, não probabilidade de fechamento.",
     "Use property_id exatamente como recebido. Não recomende IDs que não estejam na lista.",
@@ -183,7 +183,30 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
     if (deleteError) throw new Error("Não foi possível atualizar as recomendações anteriores.");
     const { data: saved, error: saveError } = await supabase.from("property_recommendations").insert(suggestions).select("id,profile_id,property_id,compatibility_score,reasoning,matched_criteria,unmatched_criteria,model_name,status,generated_at");
     if (saveError) throw new Error("A análise foi concluída, mas não foi possível salvar as recomendações.");
-    return NextResponse.json({ success: true, count: saved?.length || 0, technical_count: properties.length, recommendations: saved || [] });
+    const propertyById = new Map(ranked.map((property) => [property.id, property]));
+    const recommendations = (saved || []).map((item) => {
+      const property = propertyById.get(item.property_id);
+      return {
+        ...item,
+        property: property ? {
+          codigo: property.codigo,
+          titulo: property.titulo,
+          bairro: property.bairro,
+          cidade: property.cidade,
+          dormitorios: property.dormitorios,
+          suites: property.suites,
+          capacidade: property.capacidade,
+          distancia_praia: property.distancia_praia_m,
+          piscina: property.piscina,
+          churrasqueira: property.churrasqueira,
+          area_gourmet: property.area_gourmet,
+          servico_praia: property.servico_praia,
+          url_origem: property.url_origem,
+          cover: property.foto_capa,
+        } : undefined,
+      };
+    });
+    return NextResponse.json({ success: true, count: recommendations.length, technical_count: properties.length, recommendations });
   } catch (error) {
     console.error("BancoLead Gemini analysis failed:", error instanceof Error ? error.message : "unknown");
     return NextResponse.json({ error: error instanceof Error ? error.message : "Falha ao analisar os imóveis." }, { status: 502 });
