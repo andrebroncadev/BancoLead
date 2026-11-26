@@ -40,7 +40,7 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   const properties = ((rawProperties || []) as Property[]).filter((property) => {
     const neighborhood = normalize(property.bairro || "");
     const place = normalize([property.bairro, property.cidade].filter(Boolean).join(" "));
-    if (requestedLocations.length && !requestedLocations.some((location) => place.includes(location) || (neighborhood.length > 0 && location.includes(neighborhood)))) return false;
+    if (requestedLocations.length && !requestedLocations.some((location: string) => place.includes(location) || (neighborhood.length > 0 && location.includes(neighborhood)))) return false;
     if (profile.dormitorios_min != null && property.dormitorios < profile.dormitorios_min) return false;
     if (profile.dormitorios_max != null && property.dormitorios > profile.dormitorios_max) return false;
     if (profile.suites_min != null && property.suites < profile.suites_min) return false;
