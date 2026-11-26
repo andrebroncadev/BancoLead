@@ -73,6 +73,7 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
     titulo: property.titulo,
     bairro: property.bairro,
     cidade: property.cidade,
+    url_origem: property.url_origem,
     capacidade: property.capacidade,
     dormitorios: property.dormitorios,
     suites: property.suites,
