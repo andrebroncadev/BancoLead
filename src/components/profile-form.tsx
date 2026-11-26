@@ -5,7 +5,6 @@ import { createSearchProfile } from "@/app/actions";
 
 type Lead = { id: string; name: string; phone: string | null; location: string | null; deal?: { budget: number | null; neighborhood: string | null; bedrooms: number | null; suites: number | null; people: number | null; check_in: string | null; check_out: string | null; kind: string } };
 
-const money = (value: number | null | undefined) => value ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(value) : "";
 
 export function ProfileForm({ leads }: { leads: Lead[] }) {
   const [leadId, setLeadId] = useState(leads[0]?.id || "");
@@ -39,6 +38,7 @@ export function ProfileForm({ leads }: { leads: Lead[] }) {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setBusy(true); setMessage("");
     const data = new FormData();
     data.set("lead_id", leadId); data.set("modalidade", mode); data.set("localizacoes", locations);
@@ -48,7 +48,7 @@ export function ProfileForm({ leads }: { leads: Lead[] }) {
     const result = await createSearchProfile(data);
     setMessage(result.error || (result.success ? "Perfil salvo com sucesso. Ele já está vinculado ao lead no CRM." : "Não foi possível salvar."));
     setBusy(false);
-    if (result.success) event.currentTarget.reset();
+    if (result.success) form.reset();
   }
 
   return <form onSubmit={submit} className="profile-form">
