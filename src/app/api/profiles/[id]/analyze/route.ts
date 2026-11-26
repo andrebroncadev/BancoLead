@@ -38,13 +38,19 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
 
   const requestedLocations = (profile.localizacoes || []).map((item: string) => normalize(item)).filter(Boolean);
   const properties = ((rawProperties || []) as Property[]).filter((property) => {
+    const neighborhood = normalize(property.bairro || "");
     const place = normalize([property.bairro, property.cidade].filter(Boolean).join(" "));
-    if (requestedLocations.length && !requestedLocations.some((location) => place.includes(location) || location.includes(normalize(property.bairro || "")))) return false;
+    if (requestedLocations.length && !requestedLocations.some((location) => place.includes(location) || (neighborhood.length > 0 && location.includes(neighborhood)))) return false;
     if (profile.dormitorios_min != null && property.dormitorios < profile.dormitorios_min) return false;
     if (profile.dormitorios_max != null && property.dormitorios > profile.dormitorios_max) return false;
     if (profile.suites_min != null && property.suites < profile.suites_min) return false;
     if (profile.suites_max != null && property.suites > profile.suites_max) return false;
     if (profile.hospedes != null && property.capacidade < profile.hospedes) return false;
+    const requiredAmenities = profile.comodidades && typeof profile.comodidades === "object" ? profile.comodidades as Record<string, unknown> : {};
+    if (requiredAmenities.piscina === true && !property.piscina) return false;
+    if (requiredAmenities.churrasqueira === true && !property.churrasqueira) return false;
+    if (requiredAmenities.area_gourmet === true && !property.area_gourmet) return false;
+    if (requiredAmenities.servico_praia === true && !property.servico_praia) return false;
     if (profile.distancia_praia_max_m != null && property.distancia_praia != null && property.distancia_praia > profile.distancia_praia_max_m) return false;
     return true;
   });
