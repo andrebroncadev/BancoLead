@@ -38,3 +38,15 @@ Configure em Project Settings → Environment Variables:
 - `GEMINI_MODEL`: modelo Gemini (padrão: `gemini-2.5-flash`).
 
 A chave é lida exclusivamente no servidor. Nunca a coloque em arquivos versionados ou no código do navegador.
+
+## BancoLead: base independente e assistente Gemini
+
+Os leads do BancoLead são armazenados em `public.bancolead_leads`. A aplicação não importa nem lista automaticamente `crm_contacts` ou `crm_deals`. Os dados antigos do CRM permanecem intactos e fora desta aplicação.
+
+A entrada de dados ocorre por:
+- Formulário manual da plataforma.
+- Assistente conversacional Gemini, com ferramentas server-side para listar, cadastrar e atualizar leads e criar perfis de busca.
+
+O Gemini só deve executar gravações após instrução explícita do usuário. A API usa a sessão autenticada e as políticas RLS do workspace. Não há ferramenta de exclusão de dados disponível ao modelo.
+
+Configure `GEMINI_API_KEY` como variável privada na Vercel para habilitar o chat. A chave não deve usar o prefixo `NEXT_PUBLIC_`.
