@@ -43,17 +43,17 @@ export default async function DashboardPage() {
   const profiles = (rawProfiles || []) as Profile[];
   const profileByLead = new Map<string, Profile>();
   profiles.forEach((profile) => { if (!profileByLead.has(profile.lead_id)) profileByLead.set(profile.lead_id, profile); });
-  const tenants = leads.map((lead) => {
+  const tenants = leads.flatMap((lead) => {
     const profile = profileByLead.get(lead.id);
-    if (!profile) return null;
-    return {
+    if (!profile) return [];
+    return [{
       id: lead.id, name: lead.name, phone: lead.phone, email: lead.email, title: lead.title, notes: lead.notes,
       profileId: profile.id, locations: profile.localizacoes || [], guests: profile.hospedes,
       checkin: profile.data_checkin, checkout: profile.data_checkout, budget: profile.orcamento_max,
       bedrooms: profile.dormitorios_min, suites: profile.suites_min, beachDistance: profile.distancia_praia_max_m,
       amenities: profile.comodidades || {}, preferences: profile.observacoes,
-    };
-  }).filter((tenant): tenant is NonNullable<typeof tenant> => tenant !== null);
+    }];
+  });
 
   const profileIds = profiles.map((profile) => profile.id);
   const { data: rawRecommendations } = profileIds.length ? await supabase.from("property_recommendations")
