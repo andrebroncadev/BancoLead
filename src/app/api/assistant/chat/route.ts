@@ -149,24 +149,22 @@ export async function POST(request: Request) {
 
   try {
     const ai = getGeminiClient();
-    const contents: Array<{ role: string; parts: Array<Record<string, unknown>> }> = [
-      { role: "user", parts: [{ text: [
-        "Você é o assistente operacional do BancoLead, uma ferramenta privada de relacionamento imobiliário.",
-        "A base BancoLead é independente: nunca importe nem consulte crm_contacts ou crm_deals.",
-        "O catálogo de imóveis do BancoImob é apenas leitura nesta conversa.",
-        "Você pode listar, cadastrar e atualizar leads próprios e cadastrar perfis de busca.",
-        "REGRA DE ESCRITA: nunca execute ferramenta que altere dados só porque o usuário descreveu uma pessoa ou situação. Só grave quando houver comando explícito como 'cadastre', 'adicione', 'salve', 'atualize' ou equivalente.",
-        "Se faltarem dados essenciais, faça uma pergunta em vez de inventar. Não invente telefone, e-mail, profissão, orçamento ou datas.",
-        "Para criar perfil, se o lead ainda não estiver cadastrado, peça os dados ou cadastre-o apenas se o usuário também tiver pedido isso explicitamente.",
-        "Após cada operação, informe claramente o que foi realmente salvo. Não diga que gravou se a ferramenta falhar.",
-        "Responda em português brasileiro, de forma direta e organizada.",
-      ].join("\n") }] },
-      ...messages,
-    ];
+    const systemInstruction = [
+      "Você é o assistente operacional do BancoLead, uma ferramenta privada de relacionamento imobiliário.",
+      "A base BancoLead é independente: nunca importe nem consulte crm_contacts ou crm_deals.",
+      "O catálogo de imóveis do BancoImob é apenas leitura nesta conversa.",
+      "Você pode listar, cadastrar e atualizar leads próprios e cadastrar perfis de busca.",
+      "REGRA DE ESCRITA: nunca execute ferramenta que altere dados só porque o usuário descreveu uma pessoa ou situação. Só grave quando houver comando explícito como 'cadastre', 'adicione', 'salve', 'atualize' ou equivalente.",
+      "Se faltarem dados essenciais, faça uma pergunta em vez de inventar. Não invente telefone, e-mail, profissão, orçamento ou datas.",
+      "Para criar perfil, se o lead ainda não estiver cadastrado, peça os dados ou cadastre-o apenas se o usuário também tiver pedido isso explicitamente.",
+      "Após cada operação, informe claramente o que foi realmente salvo. Não diga que gravou se a ferramenta falhar.",
+      "Responda em português brasileiro, de forma direta e organizada.",
+    ].join("\\n");
+    const contents: Array<{ role: string; parts: Array<Record<string, unknown>> }> = [...messages];
     let response = await ai.models.generateContent({
       model: GEMINI_MODEL,
       contents: contents as never,
-      config: { tools: [{ functionDeclarations: declarations }] },
+      config: { systemInstruction, tools: [{ functionDeclarations: declarations }] },
     });
     const actions: Record<string, unknown>[] = [];
     for (let turn = 0; turn < 3; turn++) {
@@ -186,7 +184,7 @@ export async function POST(request: Request) {
         }
       }
       contents.push({ role: "user", parts: functionResponses });
-      response = await ai.models.generateContent({ model: GEMINI_MODEL, contents: contents as never, config: { tools: [{ functionDeclarations: declarations }] } });
+      response = await ai.models.generateContent({ model: GEMINI_MODEL, contents: contents as never, config: { systemInstruction, tools: [{ functionDeclarations: declarations }] } });
     }
     return NextResponse.json({ text: response.text || "Concluído.", actions });
   } catch (error) {
