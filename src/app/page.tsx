@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { signOut } from "@/app/actions";
 import { ProfileForm } from "@/components/profile-form";
 import { RecommendationsPanel } from "@/components/recommendations-panel";
@@ -51,9 +52,9 @@ export default async function DashboardPage() {
   return (
     <main className="app-shell">
       <aside className="sidebar">
-        <a className="brand" href="/"><span className="brand-mark">B</span><span>BancoLead<small>INTELIGÊNCIA COMERCIAL</small></span></a>
+        <Link className="brand" href="/"><span className="brand-mark">B</span><span>BancoLead<small>INTELIGÊNCIA COMERCIAL</small></span></Link>
         <div className="side-label">WORKSPACE</div>
-        <a className="side-link active" href="/"><span>▦</span> Visão geral</a>
+        <Link className="side-link active" href="/"><span>▦</span> Visão geral</Link>
         <a className="side-link" href="#novo-perfil"><span>＋</span> Novo perfil de busca</a>
         <a className="side-link" href="#perfis"><span>◎</span> Perfis de busca</a>
         <div className="side-bottom"><div className="avatar user-avatar">{(user.email || "U").slice(0,1).toUpperCase()}</div><div className="user-meta"><strong>{user.email}</strong><small>Conta autenticada</small></div><form action={signOut}><button className="logout" aria-label="Sair">↗</button></form></div>
