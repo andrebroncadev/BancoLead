@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const numberOrNull = (value: FormDataEntryValue | null) => {
@@ -47,4 +48,10 @@ export async function createSearchProfile(data: FormData): Promise<{ success?: b
   if (error) return { error: "Não foi possível salvar o perfil. Verifique as permissões do workspace." };
   revalidatePath("/");
   return { success: true };
+}
+
+export async function signOut() {
+  const supabase = await createSupabaseServerClient();
+  await supabase.auth.signOut();
+  redirect("/login");
 }
