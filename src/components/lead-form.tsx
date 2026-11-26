@@ -8,6 +8,7 @@ export function LeadForm() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [open, setOpen] = useState(false);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -19,13 +20,14 @@ export function LeadForm() {
     if (result.success) {
       form.reset();
       setMessage("Locatário cadastrado. Já pode fazer o match.");
+      setOpen(false);
       router.refresh();
     } else {
       setMessage(result.error || "Não foi possível cadastrar.");
     }
   }
 
-  return <form className="tenant-form" onSubmit={submit}>
+  return <section className="new-tenant-wrap"><button className="btn primary new-tenant-trigger" type="button" onClick={()=>setOpen(v=>!v)}>{open?"Fechar cadastro":"＋ Novo locatário"}</button>{open&&<form className="tenant-form" onSubmit={submit}>
     <div className="tenant-form-section">
       <div className="form-section-title"><span>01</span><div><strong>Dados do locatário</strong><small>Quem está procurando o imóvel?</small></div></div>
       <label className="field"><span>Nome completo *</span><input name="name" required placeholder="Nome do cliente"/></label>
@@ -57,5 +59,5 @@ export function LeadForm() {
       <label className="field"><span>Observações / detalhes da conversa</span><textarea name="preferencias" rows={3} placeholder="Flexibilidade de datas, crianças, pets, preferência por pé na areia, contexto do cliente…"/></label>
     </div>
     <div className="tenant-form-footer"><p role="status">{message}</p><button className="primary-button" disabled={busy}>{busy ? "Salvando…" : "Cadastrar locatário"} <span>＋</span></button></div>
-  </form>;
+  </form>}</section>;
 }
