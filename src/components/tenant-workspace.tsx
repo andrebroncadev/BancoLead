@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Tenant = {
   id: string; name: string; phone: string | null; email: string | null;
@@ -23,7 +23,9 @@ type Recommendation = {
 };
 
 export function TenantWorkspace({ tenants, initialRecommendations }: { tenants: Tenant[]; initialRecommendations: Recommendation[] }) {
-  const [selectedId,setSelectedId]=useState(tenants[0]?.id||"");
+  const [selectedId,setSelectedId]=useState(tenants[0]?.profileId||"");
+  const firstProfileId=tenants[0]?.profileId||"";
+  useEffect(()=>{if(firstProfileId)setSelectedId(firstProfileId)},[firstProfileId]);
   const [recommendations,setRecommendations]=useState(initialRecommendations);
   const [query,setQuery]=useState("");
   const [busy,setBusy]=useState(false);
