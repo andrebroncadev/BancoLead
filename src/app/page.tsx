@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { signOut } from "@/app/actions";
+import { ProfileForm } from "@/components/profile-form";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-type Contact = { id: string; name: string | null; phone: string | null; email: string | null; location: string | null; roles: string[] | null };
+type Contact = { id: string; name: string; phone: string | null; email: string | null; location: string | null; roles: string[] | null };
+type Deal = { id: string; contact_id: string | null; kind: string; budget: number | null; check_in: string | null; check_out: string | null; people: number | null; neighborhood: string | null; bedrooms: number | null; suites: number | null };
 type Profile = { id: string; lead_id: string; modalidade: string; localizacoes: string[]; status: string; updated_at: string };
 
 export default async function DashboardPage() {
@@ -10,53 +12,47 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const [{ data: contacts, error: contactsError }, { data: profiles, error: profilesError }] = await Promise.all([
-    supabase.from("crm_contacts").select("id,name,phone,email,location,roles").order("name").limit(100),
+  const [{ data: contacts, error: contactsError }, { data: profiles, error: profilesError }, { data: deals }] = await Promise.all([
+    supabase.from("crm_contacts").select("id,name,phone,email,location,roles").order("name").limit(250),
     supabase.from("lead_search_profiles").select("id,lead_id,modalidade,localizacoes,status,updated_at").order("updated_at", { ascending: false }).limit(100),
+    supabase.from("crm_deals").select("id,contact_id,kind,budget,check_in,check_out,people,neighborhood,bedrooms,suites").eq("status", "open").order("updated_at", { ascending: false }).limit(250),
   ]);
 
   const safeContacts = (contacts || []) as Contact[];
   const safeProfiles = (profiles || []) as Profile[];
+  const safeDeals = (deals || []) as Deal[];
+  const dealByContact = new Map<string, Deal>();
+  safeDeals.forEach((deal) => { if (deal.contact_id && !dealByContact.has(deal.contact_id)) dealByContact.set(deal.contact_id, deal); });
+  const leads = safeContacts.map((contact) => ({ ...contact, deal: dealByContact.get(contact.id) }));
   const contactById = new Map(safeContacts.map((contact) => [contact.id, contact]));
+  const activeProfiles = safeProfiles.filter((profile) => profile.status === "ativo").length;
 
   return (
-    <main className="min-h-screen">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <div><p className="text-xs font-bold uppercase tracking-[.2em] text-blue-700">BancoLead</p><h1 className="text-xl font-bold">Inteligência comercial</h1></div>
-          <form action={signOut}><button className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium">Sair</button></form>
+    <main className="app-shell">
+      <aside className="sidebar">
+        <a className="brand" href="/"><span className="brand-mark">B</span><span>BancoLead<small>INTELIGÊNCIA COMERCIAL</small></span></a>
+        <div className="side-label">WORKSPACE</div>
+        <a className="side-link active" href="/"><span>▦</span> Visão geral</a>
+        <a className="side-link" href="#novo-perfil"><span>＋</span> Novo perfil de busca</a>
+        <a className="side-link" href="#perfis"><span>◎</span> Perfis de busca</a>
+        <div className="side-bottom"><div className="avatar user-avatar">{(user.email || "U").slice(0,1).toUpperCase()}</div><div className="user-meta"><strong>{user.email}</strong><small>Conta autenticada</small></div><form action={signOut}><button className="logout" aria-label="Sair">↗</button></form></div>
+      </aside>
+      <section className="main-area">
+        <header className="topbar"><div><span className="crumb">Workspace /</span> <strong>Visão geral</strong></div><div className="top-actions"><span className="connection"><i/> CRM conectado</span><a className="imob-link" href="https://bancoimob-bronca.vercel.app/" target="_blank" rel="noreferrer">Abrir BancoImob ↗</a></div></header>
+        <div className="content">
+          <div className="welcome-row"><div><span className="eyebrow">CENTRAL DE INTELIGÊNCIA IMOBILIÁRIA</span><h1>Encontre o imóvel certo<br/><em>para cada lead.</em></h1><p>Transforme a intenção de busca em recomendações mais assertivas.</p></div><div className="welcome-art"><div className="art-circle"/><div className="art-card"><span>LEAD MATCH</span><strong>↗</strong><small>CRM × BancoImob</small></div></div></div>
+          <div className="stats-grid"><Stat label="Contatos no CRM" value={String(safeContacts.length)} detail="Base conectada" icon="♙"/><Stat label="Perfis de busca" value={String(safeProfiles.length)} detail="Demandas estruturadas" icon="◎"/><Stat label="Perfis ativos" value={String(activeProfiles)} detail="Em acompanhamento" icon="◷"/><Stat label="Oportunidades" value={String(safeDeals.length)} detail="Negociações abertas" icon="↗"/></div>
+          {(contactsError || profilesError) && <div className="notice">Algumas consultas não puderam ser carregadas. Verifique as políticas de acesso do CRM.</div>}
+          <div className="workspace-grid">
+            <section className="panel profile-panel" id="novo-perfil"><div className="panel-top"><div><span className="eyebrow">COMECE POR AQUI</span><h2>Estruture uma busca</h2></div><span className="panel-icon">✳</span></div><ProfileForm leads={leads}/></section>
+            <section className="panel lead-panel"><div className="panel-top"><div><span className="eyebrow">BASE DE CONTATOS</span><h2>Leads recentes</h2></div><span className="count">{safeContacts.length} contatos</span></div><div className="lead-list">{safeContacts.slice(0,8).map((contact)=>{const deal=dealByContact.get(contact.id);return <div className="lead-row" key={contact.id}><span className="avatar">{contact.name.slice(0,1).toUpperCase()}</span><div className="lead-info"><strong>{contact.name}</strong><small>{contact.location || contact.phone || "Contato cadastrado"}</small></div>{deal&&<span className="intent-tag">{deal.kind==="compra"?"Compra":deal.kind==="locacao"?"Locação":"Temporada"}</span>}</div>})}{safeContacts.length===0&&<p className="empty">Nenhum contato visível neste workspace.</p>}</div><a className="text-link" href="#novo-perfil">Criar perfil para um lead <span>→</span></a></section>
+          </div>
+          <section className="panel recent-panel" id="perfis"><div className="panel-top"><div><span className="eyebrow">ACOMPANHAMENTO</span><h2>Perfis de busca recentes</h2></div><span className="count">{safeProfiles.length} registros</span></div><div className="profile-table"><div className="table-head"><span>LEAD</span><span>MODALIDADE</span><span>LOCALIZAÇÃO</span><span>STATUS</span></div>{safeProfiles.slice(0,10).map((profile)=>{const contact=contactById.get(profile.lead_id);return <div className="table-row" key={profile.id}><strong>{contact?.name || "Lead sem nome"}</strong><span>{profile.modalidade}</span><span>{profile.localizacoes.join(", ") || "Não definida"}</span><span className="status-pill">{profile.status}</span></div>})}{safeProfiles.length===0&&<p className="empty">Os perfis criados aparecerão aqui. Cadastre a primeira busca acima.</p>}</div></section>
+          <footer className="footer">BancoLead <span>·</span> Dados sincronizados com o CRM e BancoImob</footer>
         </div>
-      </header>
-      <section className="mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-8"><h2 className="text-2xl font-bold">Visão geral</h2><p className="mt-1 text-sm text-slate-500">Perfis de busca conectados ao CRM e ao catálogo BancoImob.</p></div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Stat label="Contatos visíveis" value={String(safeContacts.length)} />
-          <Stat label="Perfis de busca" value={String(safeProfiles.length)} />
-          <Stat label="Perfis ativos" value={String(safeProfiles.filter((p) => p.status === "ativo").length)} />
-        </div>
-        {(contactsError || profilesError) && <p className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Algumas consultas não puderam ser carregadas. Verifique as políticas de acesso do CRM e das novas tabelas.</p>}
-        <div className="mt-10 grid gap-8 lg:grid-cols-[1.1fr_.9fr]">
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <div className="mb-4 flex items-center justify-between"><h3 className="font-bold">Contatos do CRM</h3><span className="text-xs text-slate-500">Até 100 registros</span></div>
-            <div className="divide-y divide-slate-100">
-              {safeContacts.slice(0, 12).map((contact) => <div key={contact.id} className="py-3"><p className="font-medium">{contact.name || "Contato sem nome"}</p><p className="mt-1 text-xs text-slate-500">{[contact.location, contact.phone, contact.email].filter(Boolean).join(" · ") || "Sem dados complementares"}</p></div>)}
-              {safeContacts.length === 0 && <p className="py-8 text-sm text-slate-500">Nenhum contato visível para este usuário.</p>}
-            </div>
-          </section>
-          <section className="rounded-2xl border border-slate-200 bg-white p-5">
-            <div className="mb-4 flex items-center justify-between"><h3 className="font-bold">Perfis de busca recentes</h3><span className="text-xs text-slate-500">Mais recentes</span></div>
-            <div className="divide-y divide-slate-100">
-              {safeProfiles.map((profile) => { const contact = contactById.get(profile.lead_id); return <div key={profile.id} className="py-3"><p className="font-medium">{contact?.name || "Lead"}</p><p className="mt-1 text-xs text-slate-500">{profile.modalidade} · {profile.localizacoes.join(", ") || "Localização não definida"}</p></div>; })}
-              {safeProfiles.length === 0 && <p className="py-8 text-sm text-slate-500">Ainda não existem perfis de busca cadastrados.</p>}
-            </div>
-          </section>
-        </div>
-        <p className="mt-8 text-xs text-slate-400">Sessão: {user.email}</p>
       </section>
     </main>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return <div className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-sm text-slate-500">{label}</p><p className="mt-2 text-3xl font-bold tracking-tight">{value}</p></div>;
-}
+function Stat({label,value,detail,icon}:{label:string;value:string;detail:string;icon:string}) { return <div className="stat-card"><div className="stat-head"><span>{label}</span><i>{icon}</i></div><strong>{value}</strong><small>{detail}</small></div>; }
