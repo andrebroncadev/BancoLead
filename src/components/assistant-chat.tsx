@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 type Message = { role: "user" | "model"; text: string };
 
 export function AssistantChat() {
+  const router=useRouter();
   const [messages,setMessages]=useState<Message[]>([
     {role:"model",text:"Olá! Posso organizar sua base do BancoLead. Você pode pedir para listar leads, cadastrar alguém, atualizar informações ou criar um perfil de busca. Não salvo nada sem uma instrução explícita."}
   ]);
@@ -26,6 +28,7 @@ export function AssistantChat() {
       const payload=await response.json();
       if(!response.ok)throw new Error(payload.error||"Não foi possível falar com o Gemini.");
       setMessages([...next,{role:"model",text:payload.text||"Concluído."}]);
+      if(Array.isArray(payload.actions)&&payload.actions.length>0)router.refresh();
     }catch(e){
       setError(e instanceof Error?e.message:"Falha inesperada.");
       setMessages(next);
