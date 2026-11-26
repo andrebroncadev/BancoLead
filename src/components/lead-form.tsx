@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createLead } from "@/app/actions";
 
 type Lead = { id: string; name: string; phone: string | null; email: string | null; title: string | null; notes: string | null };
 
 export function LeadForm({ onCreated }: { onCreated?: (lead: Lead) => void }) {
+  const router=useRouter();
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState("");
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -14,7 +16,7 @@ export function LeadForm({ onCreated }: { onCreated?: (lead: Lead) => void }) {
     setBusy(true);setMessage("");
     const result=await createLead(new FormData(form));
     setBusy(false);
-    if(result.success && result.lead){form.reset();setMessage("Lead cadastrado.");onCreated?.(result.lead);}
+    if(result.success && result.lead){form.reset();setMessage("Lead cadastrado.");onCreated?.(result.lead);router.refresh();}
     else setMessage(result.error || "Não foi possível cadastrar.");
   }
   return <form className="lead-create-form" onSubmit={submit}>
