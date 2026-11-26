@@ -32,8 +32,8 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center p-6">
       <form onSubmit={handleSubmit} className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
         <p className="text-sm font-semibold uppercase tracking-[.2em] text-blue-700">BancoLead</p>
-        <h1 className="mt-3 text-2xl font-bold text-slate-900">Acesse sua inteligência comercial</h1>
-        <p className="mt-2 text-sm text-slate-500">Entre com seu usuário do CRM.</p>
+        <h1 className="mt-3 text-2xl font-bold text-slate-900">Acesse o BancoLead</h1>
+        <p className="mt-2 text-sm text-slate-500">Entre com seu acesso da equipe.</p>
         <label className="mt-6 block text-sm font-medium">E-mail</label>
         <input className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-500" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         <label className="mt-4 block text-sm font-medium">Senha</label>
